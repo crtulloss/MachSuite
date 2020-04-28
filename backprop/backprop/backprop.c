@@ -237,13 +237,10 @@ void update_weights(TYPE weights1[input_dimension*layer1_dimension],
 }
 
 void backprop(TYPE weights1[input_dimension*layer1_dimension], 
-                TYPE weights2[layer1_dimension*layer1_dimension],
-                TYPE weights3[layer1_dimension*output_dimension],
+                TYPE weights2[layer1_dimension*output_dimension],
                 TYPE biases1[layer1_dimension], 
-                TYPE biases2[layer1_dimension],
-                TYPE biases3[output_dimension],
-                TYPE training_data[training_sets*input_dimension],
-                TYPE training_targets[training_sets*output_dimension]) {
+                TYPE biases2[output_dimension],
+                TYPE training_data[input_dimension]) {
     int i,j;
     //Forward and training structures
     TYPE activations1[layer1_dimension];

@@ -36,23 +36,17 @@
 
 void backprop(
     TYPE weights1[input_dimension*layer1_dimension],
-    TYPE weights2[layer1_dimension*layer1_dimension],
-    TYPE weights3[layer1_dimension*output_dimension],
+    TYPE weights2[layer1_dimension*output_dimension],
     TYPE biases1[layer1_dimension],
-    TYPE biases2[layer1_dimension],
-    TYPE biases3[output_dimension],
-    TYPE training_data[training_sets*input_dimension],
-    TYPE training_targets[training_sets*output_dimension]);
+    TYPE biases2[output_dimension],
+    TYPE training_data[num_iters_perin*input_dimension]);
 ////////////////////////////////////////////////////////////////////////////////
 // Test harness interface code.
 
-struct bench_args_t {
+struct bench_args_t { 
     TYPE weights1[input_dimension*layer1_dimension];
-    TYPE weights2[layer1_dimension*layer1_dimension];
-    TYPE weights3[layer1_dimension*output_dimension];
+    TYPE weights2[layer1_dimension*output_dimension];
     TYPE biases1[layer1_dimension];
-    TYPE biases2[layer1_dimension];
-    TYPE biases3[output_dimension];
-    TYPE training_data[training_sets*input_dimension];
-    TYPE training_targets[training_sets*output_dimension];
+    TYPE biases2[output_dimension];
+    TYPE training_data[input_dimension];
 };
