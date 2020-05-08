@@ -170,11 +170,12 @@ void update_weights(TYPE weights1[input_dimension*layer1_dimension],
     }
 }
 
-void backprop(TYPE weights1[input_dimension*layer1_dimension], 
+void backprop(TYPE weights1[num_windows*input_dimension*layer1_dimension], 
                 TYPE weights2[layer1_dimension*output_dimension],
                 TYPE biases1[layer1_dimension], 
                 TYPE biases2[output_dimension],
-                TYPE training_data[input_dimension]) {
+                TYPE training_data[num_windows*tsamps_perbatch*input_dimension],
+                bool flag[num_windows]) {
     int i,j;
 
     // forward and training structures
@@ -189,6 +190,48 @@ void backprop(TYPE weights1[input_dimension*layer1_dimension],
     TYPE delta_weights1[input_dimension*layer1_dimension]; 
     TYPE delta_weights2[layer1_dimension*output_dimension];
     TYPE oracle_activations1[layer1_dimension];
+
+    // single-tsamp data for all electrodes - size e.g. 4 * 32 = 256
+    TYPE elecdata[input_dimension*num_windows];
+    uint32_t num_electrodes = num_windows*input_dimension;
+    uint32_t samp_offset;
+    uint32_t window_offset;
+
+    for (uint32_t epoch = 0; epoch < epochs_perbatch; epochs++) {
+        
+        // INSERT HERE set up accum variables for all windows
+        
+        for (uint32_t samp = 0; samp < tsamps_perbatch; samp++) {
+
+            // offset to access input data for this time samp
+            samp_offset = samp*num_electrodes;
+
+            // access input data for all windows from PLM
+            for (uint32_t elec = 0; elec < num_electrodes; elec++) {
+                // this is a PLM access - can only UNROLL if has multiple ports
+                elecdata[elec] = training_data[samp_offset+elec];
+            }
+
+            for (uint32_t window = 0; window < num_windows; window++) {
+                //UNROLL?
+
+                window_offset = window*input_dimension;
+
+                if (flag[window]) {
+                    // use activation variable that is the size of all neurons, all electrodes?
+                    // so that it can be parallelized
+                    // forward pass
+                    // accum results
+                }
+            }
+        }
+        for (uint32_t window = 0; window < num_windows; window++) {
+            //UNROLL?
+            // post process accum
+            // backprop
+            // update weights
+        }
+    }
 
     // same training data is used for num_iters_perin
     for (i = 0; i < num_iters_perin; i++) {
