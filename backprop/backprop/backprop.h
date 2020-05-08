@@ -15,10 +15,16 @@
 #define do_relu 0
 
 // derived parameters - NN structure from mindfuzz params
-#define input_dimension (window_size * num_tsamps)
+#define input_dimension window_size
 #define output_dimension input_dimension
 #define layer1_dimension neurons_perwin
 #define training_sets num_batches
+
+// some useful sizes
+#define W2_size = num_windows*output_dimension*layer1_dimension
+#define W1_size = num_windows*layer1_dimension*input_dimension
+#define B2_size = num_windows*output_dimension
+#define B1_size = num_windows*layer1_dimension
 
 // used in generate and local_support for testing
 #define max 1.0

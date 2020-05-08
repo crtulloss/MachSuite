@@ -170,11 +170,11 @@ void update_weights(TYPE weights1[input_dimension*layer1_dimension],
     }
 }
 
-void backprop(TYPE weights1[num_windows*input_dimension*layer1_dimension], 
-                TYPE weights2[layer1_dimension*output_dimension],
-                TYPE biases1[layer1_dimension], 
-                TYPE biases2[output_dimension],
-                TYPE training_data[num_windows*tsamps_perbatch*input_dimension],
+void backprop(TYPE weights1[W1_size], 
+                TYPE weights2[W2_size],
+                TYPE biases1[B1_size], 
+                TYPE biases2[B2_size],
+                TYPE training_data[tsamps_perbatch*num_windows*input_dimension],
                 bool flag[num_windows]) {
     int i,j;
 
@@ -192,10 +192,29 @@ void backprop(TYPE weights1[num_windows*input_dimension*layer1_dimension],
     TYPE oracle_activations1[layer1_dimension];
 
     // single-tsamp data for all electrodes - size e.g. 4 * 32 = 256
-    TYPE elecdata[input_dimension*num_windows];
     uint32_t num_electrodes = num_windows*input_dimension;
+    
+    // FLATTEN THIS?
+    TYPE elecdata[num_electrodes];
+
+    // some offsets useful for indexing
     uint32_t samp_offset;
-    uint32_t window_offset;
+    uint32_t window_offset_weights2;
+    uint32_t window_offset_weights1;
+    uint32_t window_offset_output;
+    uint32_t window_offset_layer1;
+    uint32_t window_offset_input;
+
+    // accumulation variables for batched backprop
+    TYPE dW2[W2_size];
+    TYPE dW1[W1_size];
+    TYPE dB2[B2_size];
+    TYPE dB1[B1_size];
+
+    // temporary variables to store some results
+    TYPE act1[num_windows*layer1_dimension];
+    TYPE diff[num_windows*output_dimension];
+    TYPE W2xdiff[num_windows*layer1_dimension];
 
     for (uint32_t epoch = 0; epoch < epochs_perbatch; epochs++) {
         
@@ -213,23 +232,67 @@ void backprop(TYPE weights1[num_windows*input_dimension*layer1_dimension],
             }
 
             for (uint32_t window = 0; window < num_windows; window++) {
-                //UNROLL?
+                //UNROLL? - if so, need to fix the offsets
 
-                window_offset = window*input_dimension;
+                // compute some offsets for loop indexing
+                window_offset_weights2 = window*output_dimension*layer1_dimension;
+                window_offset_weights1 = window*layer1_dimension*input_dimension;
+                window_offset_output = window*output_dimension;
+                window_offset_layer1 = window*layer1_dimension;
+                window_offset_input = window*input_dimension;
 
                 if (flag[window]) {
                     // use activation variable that is the size of all neurons, all electrodes?
                     // so that it can be parallelized
+		    
                     // forward pass
+		            // compute layer1 activations
+		            for (uint32_t neuron = 0; neuron < layer1_dimension; neuron++) {
+
+                        act1[window_offset_layer + neuron] = 0;
+
+                        for (uint32_t in = 0; in < input_dimension; in++) {
+                            act1[window_offset_layer1 + neuron] +=
+                                weights1[window_offset_weights1 + neuron*input_dimension + in] *
+                                elecdata[window_offset_input + in];
+                        }
+
+                        // add bias
+                        act1[window_ofset_layer1 + neuron] += bias1[window_offset_layer1 + neuron];
+                    }
+
+                    // compute output activations
+                    for (uint32_t out = 0; out < output_dimension; out++) {
+
+                        diff[window_offset_output + out] = 0;
+
+                        for (uint32_t neuron = 0; neuron < layer1_dimension; neuron++) {
+                            diff[window_offset_output + out] +=
+                                weights2[window_offset_weights2 + out*layer1_dimension + neuron] *
+                                act1[window_offset_layer1 + neuron];
+                        }
+
+                        // add bias
+                        diff[window_offset_output + out] += bias[window_offset_output + out];
+
+                        // subtract the ground truth difference
+                        // we don't need the output, only the difference
+                        diff[window_offset_output + out] -= elecdata[window_offset_input + out];
+
+                        // accumulate dB2
+                        dB2 += diff[window_offset_output + out];
+                    }
                     // accum results
                 }
             }
         }
         for (uint32_t window = 0; window < num_windows; window++) {
             //UNROLL?
-            // post process accum
-            // backprop
-            // update weights
+            if (flag[window]) {
+                // post process accum
+                // backprop
+                // update weights
+            }
         }
     }
 
