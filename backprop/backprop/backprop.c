@@ -1,32 +1,10 @@
 #include "backprop.h"
 
-void soft_max(TYPE net_outputs[output_dimension], TYPE activations[output_dimension]) {
-    int i;
-    TYPE sum;
-    sum = (TYPE) 0.0;
-
-    for(i=0; i < output_dimension; i++) {
-        sum += exp(-activations[i]);
-    }
-    for(i=0; i < output_dimension; i++) {
-        net_outputs[i] = exp(-activations[i])/sum;
-    }
-}
-
 void RELU(TYPE activations[layer1_dimension], TYPE dactivations[layer1_dimension], int size) {
     int i;
     for( i = 0; i < size; i++) {
         dactivations[i] = activations[i]*(1.0-activations[i]);
         activations[i] = 1.0/(1.0+exp(-activations[i]));
-    }
-}
-
-void add_bias_to_activations(TYPE biases[layer1_dimension], 
-                               TYPE activations[layer1_dimension],
-                               int size) {
-    int i;
-    for( i = 0; i < size; i++){
-        activations[i] = activations[i] + biases[i];
     }
 }
 
@@ -40,22 +18,8 @@ void matrix_vector_product_with_bias_input_layer(TYPE biases[layer1_dimension],
         for (i = 0; i < input_dimension; i++){
             activations[j] += weights[j*input_dimension + i] * input_sample[i];
         }
+	activations[j] += biases[j];
     }
-    add_bias_to_activations(biases, activations, layer1_dimension);
-}
-
-void matrix_vector_product_with_bias_second_layer(TYPE biases[layer1_dimension],
-                                                 TYPE weights[layer1_dimension*layer1_dimension],
-                                                 TYPE activations[layer1_dimension],
-                                                 TYPE input_activations[layer1_dimension]){
-    int i,j;
-    for (i = 0; i < layer1_dimension; i++){
-        activations[i] = (TYPE)0.0;
-        for(j = 0; j < layer1_dimension; j++){
-            activations[i] += weights[i*layer1_dimension + j] * input_activations[j];
-        }
-    }
-    add_bias_to_activations(biases, activations, layer1_dimension);
 }
 
 void matrix_vector_product_with_bias_output_layer(TYPE biases[output_dimension],
@@ -68,8 +32,8 @@ void matrix_vector_product_with_bias_output_layer(TYPE biases[output_dimension],
         for (i = 0; i < layer1_dimension; i++){
             activations[j] += weights[j*layer1_dimension + i] * input_activations[i];
         }
+        activations[j] += biases[j];
     }
-    add_bias_to_activations(biases, activations, output_dimension);
 }
 
 void take_difference(TYPE net_outputs[output_dimension], 
@@ -237,20 +201,22 @@ void backprop(TYPE weights1[input_dimension*layer1_dimension],
             activations2[j] = (TYPE)0.0;
         }
 
-        matrix_vector_product_with_bias_input_layer(biases1, weights1, activations1, &training_data[input_dimension]);
-        RELU(activations1, dactivations1, layer1_dimension);
+        matrix_vector_product_with_bias_input_layer(biases1, weights1, activations1, training_data);
+	if (do_relu) {
+            RELU(activations1, dactivations1, layer1_dimension);
+	}
 
         matrix_vector_product_with_bias_output_layer(biases2, weights2, activations2, activations1);
-        RELU(activations2, dactivations2, output_dimension);
+	if (do_relu) {
+            RELU(activations2, dactivations2, output_dimension);
+	}
 
-        soft_max(net_outputs, activations2);
-        
-        take_difference(net_outputs, &training_data[output_dimension], output_difference, dactivations2);
+        take_difference(activations2, training_data, output_difference, dactivations2);
 
         get_delta_matrix_weights3(delta_weights2, output_difference, activations1);
         get_oracle_activations2(weights2, output_difference, oracle_activations1, dactivations1);
         
-        get_delta_matrix_weights1(delta_weights1, oracle_activations1, &training_data[input_dimension]);
+        get_delta_matrix_weights1(delta_weights1, oracle_activations1, training_data);
 
         update_weights(weights1, weights2, delta_weights1, delta_weights2, 
                        biases1, biases2, oracle_activations1, output_difference);

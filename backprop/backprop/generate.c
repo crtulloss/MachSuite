@@ -30,12 +30,7 @@ int main( int argc, const char* argv[] ){
             data.weights2[i*layer1_dimension + j] = (((TYPE)prng_rand(&state)/((TYPE)(PRNG_RAND_MAX))) * max) - offset;
         }
     }
-    for( i = 0; i < layer1_dimension; i++){
-        data.biases3[i] = (((TYPE)prng_rand(&state)/((TYPE)(PRNG_RAND_MAX))) * max) - offset;
-        for( j = 0; j < output_dimension; j++){
-            data.weights3[i*output_dimension + j] = (((TYPE)prng_rand(&state)/((TYPE)(PRNG_RAND_MAX))) * max) - offset;
-        }
-    }
+    
     for( i = 0; i < training_sets; i++){
         for( j = 0; j < input_dimension; j++)
             data.training_data[i*input_dimension + j] = (TYPE)training_data[i][j];
