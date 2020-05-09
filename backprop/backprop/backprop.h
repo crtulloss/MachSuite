@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include "../../common/support.h"
+// backprop function inspired by Machsuite implementation,
+// completely rewritten by CRT
 
 // mindfuzz parameters - default values
 #define num_windows 32
