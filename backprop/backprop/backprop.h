@@ -33,19 +33,20 @@
 //Data Bounds
 #define TYPE double
 
-void backprop(
-    TYPE weights1[input_dimension*layer1_dimension],
-    TYPE weights2[layer1_dimension*output_dimension],
-    TYPE biases1[layer1_dimension],
-    TYPE biases2[output_dimension],
-    TYPE training_data[num_iters_perin*input_dimension]);
+void backprop(TYPE weights1[W1_size], 
+                TYPE weights2[W2_size],
+                TYPE biases1[B1_size], 
+                TYPE biases2[B2_size],
+                TYPE training_data[tsamps_perbatch*num_windows*input_dimension],
+                bool flag[num_windows]);
 ////////////////////////////////////////////////////////////////////////////////
 // Test harness interface code.
 
 struct bench_args_t { 
-    TYPE weights1[input_dimension*layer1_dimension];
-    TYPE weights2[layer1_dimension*output_dimension];
-    TYPE biases1[layer1_dimension];
-    TYPE biases2[output_dimension];
-    TYPE training_data[input_dimension];
+    TYPE weights1[W1_size];
+    TYPE weights2[W2_size];
+    TYPE biases1[B1_size];
+    TYPE biases2[B2_size];
+    TYPE training_data[tsamps_perbatch*num_windows*input_dimension];
+    bool flag[num_windows];
 };
